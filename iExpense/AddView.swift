@@ -11,7 +11,9 @@ import SwiftUI
 struct AddView: View {
     
     @ObservedObject var expenses: Expenses
+    @Environment(\.presentationMode) var presentationMode
     
+    @State private var showingAlert = false
     @State private var name = ""
     @State private var type = "Personal"
     @State private var amount = ""
@@ -27,15 +29,29 @@ struct AddView: View {
                     }
                 }
                 TextField("Amount", text: $amount)
-                    .keyboardType(.numberPad)
+                .keyboardType(.numberPad)
             }
-        .navigationBarTitle("Add new expense")
-            .navigationBarItems(trailing: Button("Save") {
-                if let actualAmount = Int(self.amount) {
-                    let item = ExpenseItem(name: self.name, type: self.type, amount: actualAmount)
-                    self.expenses.items.append(item)
-                }
-            })
+            .navigationBarTitle("Add new expense")
+                .navigationBarItems(trailing: Button("Save") {
+                    if let actualAmount = Int(self.amount) {
+                        let today = Date()
+                        let formatter = DateFormatter()
+                        formatter.dateStyle = .medium
+                        let item = ExpenseItem(todaysDate: formatter.string(from: today), name: self.name, type: self.type, amount: actualAmount)
+                        
+                        self.expenses.items.append(item)
+                        self.presentationMode.wrappedValue.dismiss()
+                        //reset values
+                        self.name = ""
+                        self.amount = ""
+                        print(item)
+                    } else {
+                        self.showingAlert = true
+                    }
+                })
+        }.alert(isPresented: $showingAlert) {
+            Alert(title: Text("🎃"), message: Text("This is not a valid number!"), dismissButton: .default(Text("OK!")))
+            
         }
     }
 }
